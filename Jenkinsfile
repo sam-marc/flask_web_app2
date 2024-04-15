@@ -28,13 +28,13 @@ pipeline {
 
         stage('Configure servers') {
             steps {
-                sh "cd ${env.WORKSPACE}/ && ansible-playbook flask_web_app/flask_app/tasks/config.yml -i hosts.ini"
+                sh "cd ${env.WORKSPACE}/ && ansible-playbook flask_web_app/config.yml -i hosts.ini"
             }
         }
 
         stage('Build app.py') {
             steps {
-                sh "cd ${env.WORKSPACE}/ && ansible-playbook -e 'external_yaml_file=app.py' flask_web_app/flask_app/tasks/deploy.yml -i hosts.ini"
+                sh "cd ${env.WORKSPACE}/ && ansible-playbook -e 'external_yaml_file=app.py' flask_web_app/deploy.yml -i hosts.ini"
             }
         }
 
@@ -43,7 +43,13 @@ pipeline {
                 ansiblePlaybook credentialsId: 'ansible-master', 
                                 installation: 'Ansible', 
                                 inventory: '/home/centos/flask_web_app/hosts.ini', 
-                                playbook: '/home/centos/flask/_app/tasks/main.yml', 
+                                playbook: '/home/centos/flask_web_app/config.yml', 
+                                vaultTmpPath: ''
+                
+                ansiblePlaybook credentialsId: 'ansible-master', 
+                                installation: 'Ansible', 
+                                inventory: '/home/centos/flask_web_app/hosts.ini', 
+                                playbook: '/home/centos/flask_web_app/deploy.yml', 
                                 vaultTmpPath: ''
             }
         }

@@ -1,2 +1,5 @@
 ---
 # tasks file for flask_app
+
+- import_tasks: confing.yml
+- import_tasks: deploy.yml

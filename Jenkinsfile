@@ -28,13 +28,13 @@ pipeline {
 
         stage('Configure servers') {
             steps {
-                sh "cd ${env.WORKSPACE}/ && ansible-playbook /flask_app/tasks/main.yml -i hosts.ini"
+                sh "cd ${env.WORKSPACE}/ && ansible-playbook flask_web_app/flask_app/tasks/config.yml -i hosts.ini"
             }
         }
 
         stage('Build app.py') {
             steps {
-                sh "cd ${env.WORKSPACE}/ && ansible-playbook -e 'external_yaml_file=app.py' /flask_app/tasks/main.yml -i hosts.ini"
+                sh "cd ${env.WORKSPACE}/ && ansible-playbook -e 'external_yaml_file=app.py' flask_web_app/flask_app/tasks/deploy.yml -i hosts.ini"
             }
         }
 

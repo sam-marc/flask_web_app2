@@ -42,8 +42,8 @@ pipeline {
             steps {
                 ansiblePlaybook credentialsId: 'ansible-master', 
                                 installation: 'Ansible', 
-                                inventory: '/home/centos/flask/hosts.ini', 
-                                playbook: '/home/centos/flask/tasks/main.yml', 
+                                inventory: '/home/centos/flask_web_app/hosts.ini', 
+                                playbook: '/home/centos/flask/_app/tasks/main.yml', 
                                 vaultTmpPath: ''
             }
         }

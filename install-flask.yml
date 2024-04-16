@@ -7,20 +7,14 @@
     git_repo_url: "https://github.com/ctoweh/flask_web_app.git"
 
   tasks:
-    - name: Install Git using dnf on CentOS
-      ansible.builtin.package:
+    - name: Install git
+      yum:
         name: git
         state: present
-      when: ansible_distribution == 'CentOS' and ansible_distribution_major_version == '8'
+      when: ansible_distribution == 'CentOS'
 
-    - name: Install Git using yum on CentOS 7
-      ansible.builtin.package:
-        name: git
-        state: present
-      when: ansible_distribution == 'CentOS' and ansible_distribution_major_version == '7'
-
-    - name: Install Git on Ubuntu
-      ansible.builtin.package:
+    - name: Install git
+      apt:
         name: git
         state: present
       when: ansible_distribution == 'Ubuntu'
@@ -32,34 +26,57 @@
         mode: '0755'
 
     - name: Clone Github repository
-      ansible.builtin.git: 
+      git: 
         repo: "{{ git_repo_url }}"
         dest: "{{ app_directory }}/repository"
 
-    - name: Install Python 3 and pip
-      ansible.builtin.package:
-        name: "{{ item }}"
+    - name: Update repositories and install Python on CentOS
+      yum:
+        name: python3
         state: present
-      loop:
-        - python3
-        - python3-pip
+      when: ansible_distribution == 'CentOS'
 
-    - name: Ensure python3-venv is installed
-      ansible.builtin.package:
-        name: python3-venv
+    - name: Install Python on Ubuntu
+      apt:
+        name: python3
         state: present
-      when: ansible_distribution == 'CentOS' or ansible_distribution == 'Ubuntu'
+      when: ansible_distribution == 'Ubuntu'
+
+    - name: Install virtualenv package
+      pip:
+        name: virtualenv
+        executable: pip
+        state: present
 
     - name: Create a virtual environment
-      ansible.builtin.command: python3 -m venv "{{ app_directory }}/venv"
-
-    - name: Activate virtual environment
-      ansible.builtin.shell: |
-        source "{{ app_directory }}/venv/bin/activate" && python --version
-      args:
-        executable: /bin/bash
-
-    - name: Install Flask within virtual environment
-      ansible.builtin.command: pip install flask
+      command: virtualenv -p python3 venv
       args:
         chdir: "{{ app_directory }}/repository"
+
+    - name: Activate virtual environment
+      shell:
+        cmd: "source {{ app_directory }}/repository/venv/bin/activate && python --version"
+
+    - name: Install flask within virtual environment
+      pip: 
+        name: flask
+        executable: pip
+        state: present
+
+    - name: Run flask app
+      command: nohup python3 app.py &
+      async: 60
+      poll: 0
+      args:
+        chdir: "{{ app_directory }}/repository"
+
+    - name: Get the PID of the flask app
+      shell: "ps aux | grep 'python3 app.py' | grep -v grep | awk '{print $2}'"
+      register: flask_pid
+      ignore_errors: yes
+
+    - name: Stop flask app after 60 seconds
+      shell: "sleep 60 && kill -TERM {{ flask_pid.stdout }}"
+      ignore_errors: yes
+
+...

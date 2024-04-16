@@ -22,7 +22,15 @@
         name: "{{ item }}"
         state: present
       loop:
-        - python3-pip  
+        - python3-pip  # Example of a system package needed for Flask app
+        # Add any other system packages needed for your Flask app
+      when: os_family == 'Debian'
+
+    - name: Install necessary system packages on CentOS
+      dnf:
+        name: python3-pip
+        state: present
+      when: os_family == 'RedHat'
 
     - name: Create flask-app directory if it doesn't exist
       ansible.builtin.file:

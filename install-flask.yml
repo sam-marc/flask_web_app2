@@ -3,9 +3,8 @@
   hosts: all
   become: yes
   vars:
-      app_directory: /home/{{ ansible_user }}/flask-app"
-      git_repo_url: "https://github.com/ctoweh/flask_web_app.git"
-
+    app_directory: "/home/{{ ansible_user }}/flask-app"
+    git_repo_url: "https://github.com/ctoweh/flask_web_app.git"
 
   tasks:
     - name: Install git
@@ -22,15 +21,14 @@
 
     - name: Create flask-app directory
       file:
-        path: “{{ app_directory }}”
+        path: "{{ app_directory }}"
         state: directory
-        mode: ‘0755’ 
-        become: yes 
+        mode: "0755"
 
     - name: Clone GitHub repository
       git:
-        repo: “{{ git_repo_url }}”
-        dest: “{{ app_directory }}/repository”
+        repo: "{{ git_repo_url }}"
+        dest: "{{ app_directory }}/repository"
         update: yes
 
     - name: Update repositories and install Python
@@ -63,17 +61,17 @@
       when: ansible_os_family == "RedHat" or ansible_distribution == "CentOS" or ansible_os_family == "Debian" or ansible_distribution == "Ubuntu"
 
     - name: Activate virtual environment
-      command: source {{ app_directory }}/venv/bin/activate
+      command: "{{ app_directory }}/venv/bin/activate"
       when: ansible_os_family == "RedHat" or ansible_distribution == "CentOS" or ansible_os_family == "Debian" or ansible_distribution == "Ubuntu"
 
     - name: Install Flask within virtual environment
       pip:
         name: flask
-        virtualenv: {{ app_directory }}/venv
+        virtualenv: "{{ app_directory }}/venv"
       when: ansible_os_family == "RedHat" or ansible_distribution == "CentOS" or ansible_os_family == "Debian" or ansible_distribution == "Ubuntu"
 
     - name: Run Flask app
-      command: python/ {{ app_directory }}/app.py &
+      command: python {{ app_directory }}/repository/app.py &
       async: 60
       poll: 0
       register: flask_app_process
@@ -89,7 +87,7 @@
       when: ansible_os_family == "RedHat" or ansible_distribution == "CentOS" or ansible_os_family == "Debian" or ansible_distribution == "Ubuntu"
 
     - name: Get PID of Flask app
-      shell: pgrep -f "python /{{ app_directory }}/app.py"
+      shell: pgrep -f "python {{ app_directory }}/repository/app.py"
       register: flask_app_pid
       when: ansible_os_family == "RedHat" or ansible_distribution == "CentOS" or ansible_os_family == "Debian" or ansible_distribution == "Ubuntu"
 

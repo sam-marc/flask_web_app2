@@ -1,5 +1,5 @@
 pipeline {
-    agent { label 'ansible_master' }
+    agent { label 'ansible-master' }
 
     stages {
         stage('Deploy with Playbook') {

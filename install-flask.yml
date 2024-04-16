@@ -52,27 +52,18 @@
         state: present
       when: ansible_pkg_mgr == "dnf"
 
-    - name: Create a directory for CentOS
+    - name: Create flask directory
       file:
-        path: flask_dir
+        path: ~/flask_dir
         state: directory
         mode: 0777
-        owner: centos
-        group: centos
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
       when: ansible_pkg_mgr == "yum"
 
-    - name: Create a directory for Amazon Linux
+    - name: Create flask directory for Ubuntu
       file:
-        path: flask_dir
-        state: directory
-        mode: 0777
-        owner: ec2-user
-        group: ec2-user
-      when: ansible_pkg_mgr == "yum"
-
-    - name: Create a directory for Ubuntu
-      file:
-        path: flask_dir
+        path: ~/flask_dir
         state: directory
         mode: 0777
         owner: ubuntu
@@ -80,10 +71,10 @@
       when: ansible_pkg_mgr == "apt"
 
     - name: remove existing flask_dir
-      file: 
+      file:
         path: ~/flask_dir
         state: absent
-      ignore errors: yes
+      ignore_errors: yes
 
     - name: clone git repository
       git: 
@@ -92,12 +83,7 @@
         version: main
 
     - name: create virtual environment
-      command: python3 -m venv flask_dir/.myenv
-      args:
-        chdir: "~/"
-    
-    - name: activate virtual environment
-      command: /bin/bash -c "source flask_dir/.myenv/bin/activate"
+      command: python3 -m venv ~/flask_dir/.myenv
       args:
         chdir: "~/"
 
@@ -106,9 +92,6 @@
         name: flask
         executable: ~/flask_dir/.myenv/bin/pip
         state: present
-    
-    - name: activate virtual environment
-      command: /bin/bash -c "source ~/flask_dir/.myenv/bin/activate"
     
     - name: start flask app
       command: /bin/bash -c "export FLASK_APP=~/flask_dir/app.py && ~/flask_dir/.myenv/bin/flask run --host=0.0.0.0 --port=5000 &"

@@ -11,7 +11,7 @@
       package:
         name: git
         state: present
-      when: ansible_distribution == "Amazon" or ansible_distribution == "CentOS"
+      when: ansible_distribution == "Amazon" or ansible_distribution == "CentOS" or ansible_distribution == "Ubuntu"
 
     - name: Create flask-app directory
       file:
@@ -41,6 +41,8 @@
         dest: /tmp/get-pip.py
       become: yes
       become_user: root
+      args:
+        creates: /usr/local/bin/pip
       when: ansible_distribution == "Amazon" or ansible_distribution == "CentOS" or ansible_distribution == "Ubuntu"
 
     - name: Install virtualenv package
@@ -54,7 +56,7 @@
       when: ansible_distribution == "Amazon" or ansible_distribution == "CentOS" or ansible_distribution == "Ubuntu"
 
     - name: Activate virtual environment
-      command: "{{ app_directory }}/venv/bin/activate"
+      command: source {{ app_directory }}/venv/bin/activate
       when: ansible_distribution == "Amazon" or ansible_distribution == "CentOS" or ansible_distribution == "Ubuntu"
 
     - name: Install Flask within virtual environment

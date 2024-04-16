@@ -87,7 +87,7 @@
 
     - name: clone git repository
       git: 
-        repo:
+        repo: https://github.com/ctoweh/flask_web_app.git
         dest: ~/flask_dir/
         version: main
 

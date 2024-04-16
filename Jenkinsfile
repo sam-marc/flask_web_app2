@@ -1,21 +1,47 @@
 pipeline {
-    agent { label 'ansible-master' }
+    agent {
+        label 'ansible-master'
+    }
+
+    tools {
+        git 'Default'
+    }
 
     stages {
-        stage('Deploy with Playbook') {
-            steps {
-                // Execute Ansible Playbook for deployment
-                sh '/usr/bin/ansible-playbook -i /home/centos/flask_web_app/hosts.ini /home/centos/flask_web_app/install-flask.yml'
-            }
+        stage('Echo') {
+           steps {
+            sh "chmod -R 755 ${env.WORKSPACE}"
+           }
         }
     }
 
-    post { 
-        success {
-            echo 'Flask app deployment successful'
+
+        stage('Clone Repository') {
+            steps {
+                script {
+                    //Specify the target directory
+                    def targetDir = "${env.WORKSPACE}"
+                    //Clone the repo into the specified directory
+                    dir(targetDir) {
+                        git branch: "main", url: ""
+                        
+                    }
+                }
+            }
         }
-        failure {
-            echo 'Flask app deployment failed'
+        
+        stage('Deploy with Playbook') {
+            //Execute ansible playbook for deployment
+            sh "cd ${env.WORKSPACE}/ && ansible-playbook -e 'external_yaml_file=app.py' install-flask.yml -i hosts.ini"
         }
-    }
-}
+
+        post{
+            always{
+                emailext body: 'Check console output at $BUILD_URL to view the results.',
+                subject: '$PROJECT_NAME - Build #BUILD_NUMBER =$BUILD_STATUS',
+                to: 'towehcorina@gmail.com'
+                
+            }
+        }
+
+        

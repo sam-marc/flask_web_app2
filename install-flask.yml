@@ -4,7 +4,7 @@
   become: true
   tasks:
     - name: Install Git on Amazon Linux
-      yum:
+      dnf:
         name: git
         state: present
       when: ansible_pkg_mgr == "yum" and ansible_distribution == "Amazon"
@@ -31,8 +31,8 @@
         update_cache: yes
       when: ansible_pkg_mgr == "apt"
 
-    - name: install necessary packages for yum (Amazon Linux)
-      yum:
+    - name: install necessary packages for dnf (Amazon Linux)
+      dnf:
         name:
           - python3-pip
           - python3-devel

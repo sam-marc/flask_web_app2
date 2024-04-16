@@ -51,11 +51,11 @@
       when: ansible_distribution == 'CentOS' or ansible_distribution == 'Ubuntu'
 
     - name: Create a virtual environment
-      ansible.builtin.command: python3 -m venv "{{ app_directory }}/repository/venv"
+      ansible.builtin.command: python3 -m venv "{{ app_directory }}/venv"
 
     - name: Activate virtual environment
       ansible.builtin.shell: |
-        source "{{ app_directory }}/repository/venv/bin/activate" && python --version
+        source "{{ app_directory }}/venv/bin/activate" && python --version
       args:
         executable: /bin/bash
 
@@ -63,19 +63,3 @@
       ansible.builtin.command: pip install flask
       args:
         chdir: "{{ app_directory }}/repository"
-
-    - name: Run flask app
-      ansible.builtin.command: nohup python3 app.py &
-      async: 60
-      poll: 0
-      args:
-        chdir: "{{ app_directory }}/repository"
-
-    - name: Get the PID of the flask app
-      ansible.builtin.shell: "ps aux | grep 'python3 app.py' | grep -v grep | awk '{print $2}'"
-      register: flask_pid
-      ignore_errors: true
-
-    - name: Stop flask app after 60 seconds
-      ansible.builtin.shell: "sleep 60 && kill -TERM {{ flask_pid.stdout }}"
-      ignore_errors: true

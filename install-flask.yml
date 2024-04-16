@@ -1,90 +1,99 @@
 ---
-- name: Configure servers 
+- name: Deploy Flask web app
   hosts: all
-  become: true
-  vars_prompt:
-    - name: "os_family"
-      prompt: "Enter the OS family of your target hosts (Debian, RedHat)"
-      private: no
+  become: yes
   vars:
-    app_directory: "/home/{{ ansible_user }}/flask-app"
-    git_repo_url: "https://github.com/ctoweh/flask_web_app.git"
+      app_directory: /home/{{ ansible_user }}/flask-app"
+      git_repo_url: "https://github.com/ctoweh/flask_web_app.git"
+
 
   tasks:
-    - name: Install Git
+    - name: Install git
       package:
         name: git
         state: present
-      when: os_family == 'Debian' or os_family == 'RedHat'
+      when: ansible_os_family == "RedHat" or ansible_distribution == "CentOS"
 
-    - name: Install necessary system packages
+    - name: Install git
+      apt:
+        name: git
+        state: present
+      when: ansible_os_family == "Debian" or ansible_distribution == "Ubuntu"
+
+    - name: Create flask-app directory
+      file:
+        path: “{{ app_directory }}”
+        state: directory
+        mode: ‘0755’ 
+        become: yes 
+
+    - name: Clone GitHub repository
+      git:
+        repo: “{{ git_repo_url }}”
+        dest: “{{ app_directory }}/repository”
+        update: yes
+
+    - name: Update repositories and install Python
       package:
         name: "{{ item }}"
         state: present
       loop:
-        - python3-pip  # Example of a system package needed for Flask app
-        # Add any other system packages needed for your Flask app
-      when: os_family == 'Debian'
+        - python
+        - python3
+      when: ansible_os_family == "RedHat" or ansible_distribution == "CentOS" or ansible_os_family == "Debian" or ansible_distribution == "Ubuntu"
 
-    - name: Install necessary system packages on CentOS
-      dnf:
-        name: python3-pip
-        state: present
-      when: os_family == 'RedHat'
-
-    - name: Create flask-app directory if it doesn't exist
-      ansible.builtin.file:
-        path: "{{ app_directory }}"
-        state: directory
-        mode: '0755'
-
-    - name: Clone Github repository
-      git: 
-        repo: "{{ git_repo_url }}"
-        dest: "{{ app_directory }}/repository"
-
-    - name: Install Python on CentOS
-      yum:
-        name: python3
-        state: present
-      when: ansible_distribution == 'CentOS'
-
-    - name: Install Python on Ubuntu
-      apt:
-        name: python3
-        state: present
-      when: ansible_distribution == 'Ubuntu'
+    - name: Install pip
+      get_url:
+        url: https://bootstrap.pypa.io/get-pip.py
+        dest: /tmp/get-pip.py
+      become: yes
+      become_user: root
+      args:
+        creates: /usr/local/bin/pip
+      when: ansible_os_family == "RedHat" or ansible_distribution == "CentOS" or ansible_os_family == "Debian" or ansible_distribution == "Ubuntu"
 
     - name: Install virtualenv package
       pip:
         name: virtualenv
         state: present
+      when: ansible_os_family == "RedHat" or ansible_distribution == "CentOS" or ansible_os_family == "Debian" or ansible_distribution == "Ubuntu"
 
-    - name: Create a virtual environment
-      ansible.builtin.command: virtualenv -p python3 venv
-      args:
-        chdir: "{{ app_directory }}/repository"
+    - name: Create virtual environment
+      command: python3 -m venv {{ app_directory }}/venv
+      when: ansible_os_family == "RedHat" or ansible_distribution == "CentOS" or ansible_os_family == "Debian" or ansible_distribution == "Ubuntu"
 
     - name: Activate virtual environment
-      ansible.builtin.shell: "{{ app_directory }}/repository/venv/bin/activate"
+      command: source {{ app_directory }}/venv/bin/activate
+      when: ansible_os_family == "RedHat" or ansible_distribution == "CentOS" or ansible_os_family == "Debian" or ansible_distribution == "Ubuntu"
 
-    - name: Install flask within virtual environment
-      pip: 
+    - name: Install Flask within virtual environment
+      pip:
         name: flask
-        state: present
+        virtualenv: {{ app_directory }}/venv
+      when: ansible_os_family == "RedHat" or ansible_distribution == "CentOS" or ansible_os_family == "Debian" or ansible_distribution == "Ubuntu"
 
-    - name: Run flask app
-      ansible.builtin.command: nohup python3 app.py &
+    - name: Run Flask app
+      command: python/ {{ app_directory }}/app.py &
       async: 60
       poll: 0
-      args:
-        chdir: "{{ app_directory }}/repository"
+      register: flask_app_process
+      when: ansible_os_family == "RedHat" or ansible_distribution == "CentOS" or ansible_os_family == "Debian" or ansible_distribution == "Ubuntu"
 
-    - name: Get the PID of the flask app
-      ansible.builtin.shell: "ps aux | grep 'python3 app.py' | grep -v grep | awk '{print $2}'"
-      register: flask_pid
-      ignore_errors: yes
+    - name: Wait for Flask app to run
+      async_status:
+        jid: "{{ flask_app_process.ansible_job_id }}"
+      register: job_result
+      until: job_result.finished
+      retries: 6
+      delay: 10
+      when: ansible_os_family == "RedHat" or ansible_distribution == "CentOS" or ansible_os_family == "Debian" or ansible_distribution == "Ubuntu"
 
-    - name: Stop flask app after 60 seconds
-      ansible.builtin.shell: "sleep 60 && kill -TERM {{ flask_pid.stdout }}"
-      ignore_errors: yes
+    - name: Get PID of Flask app
+      shell: pgrep -f "python /{{ app_directory }}/app.py"
+      register: flask_app_pid
+      when: ansible_os_family == "RedHat" or ansible_distribution == "CentOS" or ansible_os_family == "Debian" or ansible_distribution == "Ubuntu"
+
+    - name: Stop Flask app
+      shell: kill -9 "{{ flask_app_pid.stdout }}"
+      ignore_errors: true
+      when: ansible_os_family == "RedHat" or ansible_distribution == "CentOS" or ansible_os_family == "Debian" or ansible_distribution == "Ubuntu"

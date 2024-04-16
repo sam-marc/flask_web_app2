@@ -42,7 +42,7 @@ pipeline {
             body: "Check console output for details"
         }
 
-        fail { 
+        failure { 
             mail to: "towehcorina@gmail.com",
             subject: "FlaskWebApp Failed",
             body: "Check console output for details"

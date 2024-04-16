@@ -40,12 +40,12 @@ pipeline {
             mail to: "towehcorina@gmail.com",
             subject: "FlaskWebApp Succesful",
             body: "Check console output for details"
+        }
 
         fail { 
             mail to: "towehcorina@gmail.com",
             subject: "FlaskWebApp Failed",
             body: "Check console output for details"
-    
         }
     }
 }

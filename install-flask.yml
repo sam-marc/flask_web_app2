@@ -9,6 +9,11 @@
         state: present
       when: ansible_pkg_mgr == "dnf" and ansible_distribution == "Amazon"
 
+    - name: Debug Ansible facts for Amazon Linux
+      debug: 
+        var: ansible_distribution
+      when: ansible_distribution == "Amazon"
+
     - name: Install Git on CentOS
       yum:
         name: git

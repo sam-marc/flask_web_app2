@@ -7,17 +7,23 @@
     git_repo_url: "https://github.com/ctoweh/flask_web_app.git"
 
   tasks:
-    - name: Install git on CentOS using dnf
-      dnf:
+    - name: Install git on CentOS 
+      yum:
         name: git
         state: present
       when: ansible_distribution == "CentOS"
 
-    - name: Install git on Amazon Linux and Ubuntu
-      package:
+    - name: Install git on Amazon Linux 
+      dnf:
         name: git
         state: present
-      when: ansible_distribution == "Amazon" or ansible_distribution == "Ubuntu"
+      when: ansible_distribution == "Amazon"
+
+    - name: Install git on Ubuntu
+      apt:
+        name: git
+        state: present
+        when: ansible_distribution == "Ubuntu"
 
     - name: Create flask-app directory
       file:

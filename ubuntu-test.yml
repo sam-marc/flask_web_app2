@@ -32,8 +32,17 @@
         state: present
 
     - name: Create a virtual environment
-      ansible.builtin.command: python3 -m venv "{{ app_directory }}/venv"
+      ansible.builtin.command: 
+        cmd: python3 -m venv "{{ app_directory }}/venv"
 
     - name: Activate virtual environment
-      ansible.builtin.shell: |
-        source "{{ app_directory }}/ve
+      ansible.builtin.shell: 
+        cmd: source "{{ app_directory }}/venv/bin/activate" && python --version
+      args:
+        executable: /bin/bash
+
+    - name: Install Flask within virtual environment
+      ansible.builtin.command: 
+        cmd: pip install flask
+      args:
+        chdir: "{{ app_directory }}/repository"

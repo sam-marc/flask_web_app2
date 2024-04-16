@@ -7,7 +7,7 @@
     git_repo_url: "https://github.com/ctoweh/flask_web_app.git"
 
   tasks:
-    - name: Install git using dnf on CentOS
+    - name: Install git using dnf on CentOS 8
       ansible.builtin.package:
         name: git
         state: present
@@ -44,9 +44,9 @@
         - python3
         - python3-pip
 
-    - name: Ensure virtualenv is installed
+    - name: Ensure python3-venv is installed
       ansible.builtin.package:
-        name: python3-virtualenv
+        name: python3-venv
         state: present
       when: ansible_distribution == 'CentOS' or ansible_distribution == 'Ubuntu'
 
@@ -63,4 +63,3 @@
       ansible.builtin.command: pip install flask
       args:
         chdir: "{{ app_directory }}/repository"
-...

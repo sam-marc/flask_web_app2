@@ -7,7 +7,7 @@
       dnf:
         name: git
         state: present
-      when: ansible_pkg_mgr == "yum" and ansible_distribution == "Amazon"
+      when: ansible_pkg_mgr == "dnf" and ansible_distribution == "Amazon"
 
     - name: Install Git on CentOS
       yum:

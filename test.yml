@@ -1,0 +1,77 @@
+- name: Setup Flask Environment and Deploy Flask Web App
+  hosts: all
+  become: true
+  remote_user: root
+  gather_facts: true
+
+  tasks:
+    - name: Install git on CentOS 
+      yum:
+        name: git
+        state: present
+      when: ansible_distribution == "CentOS"
+
+    - name: Install git on Amazon Linux 
+      dnf:
+        name: git
+        state: present
+      when: - ansible_distribution == "Amazon"
+            - ansible_distribution_major_version == "2"  # Check if it's Amazon Linux 2
+
+    - name: Install git on Ubuntu
+      apt:
+        name: git
+        state: present
+        when: ansible_distribution == "Ubuntu"
+    - name: install python3-venv package (Ubuntu)
+      when: ansible_pkg_mgr == "apt"
+      apt:
+        name: python3-venv
+        state: present
+
+    - name: install python3-venv package (CentOS)
+      when: ansible_pkg_mgr == "yum"
+      command: python3 -m venv /path/to/your/virtual/environment
+
+    - name: install python3-venv package (Amazon Linux)
+      when: ansible_pkg_mgr == "dnf"
+      yum:
+        name: python3-venv
+        state: present
+
+    - name: remove existing flask_dir
+      file: 
+        path: ~/flask_dir
+        state: absent
+      ignore_errors: yes
+
+    - name: clone git repository
+      git:
+        repo: https://github.com/ctoweh/flask_web_app
+        dest: ~/flask_dir/
+        version: main
+
+    - name: create virtual environment (Ubuntu)
+      command: python3 -m venv ~/flask_dir/.myenv
+      when: ansible_pkg_mgr == "apt"
+
+    - name: create virtual environment (CentOS)
+      command: python3 -m venv ~/flask_dir/.myenv
+      when: ansible_pkg_mgr == "yum"
+
+    - name: create virtual environment (Amazon Linux)
+      command: python3 -m venv ~/flask_dir/.myenv
+      when: ansible_pkg_mgr == "dnf"
+
+    - name: activate virtual environment
+      command: /bin/bash -c "source ~/flask_dir/.myenv/bin/activate"
+
+    - name: set Flask app environment variables
+      set_fact:
+        flask_app_env:
+          FLASK_APP: "~/flask_dir/app.py"
+          FLASK_RUN_HOST: "0.0.0.0"
+          FLASK_RUN_PORT: "5000"
+
+    - name: start flask web app
+      command: /bin/bash -c "{{ flask_app_env | to_json | b64encode | b64decode }} && flask run &"

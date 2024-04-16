@@ -11,14 +11,7 @@
       package:
         name: git
         state: present
-      vars:
-        package_manager:
-          Debian: apt
-          RedHat: yum
-      vars_prompt:
-        - name: "os_family"
-          prompt: "Enter the OS family of your target hosts (Debian, RedHat)"
-          private: no
+      when: os_family == 'Debian' or os_family == 'RedHat'
 
     - name: Install necessary system packages
       package:
@@ -39,7 +32,7 @@
         repo: "{{ git_repo_url }}"
         dest: "{{ app_directory }}/repository"
 
-    - name: Update repositories and install Python on CentOS
+    - name: Install Python on CentOS
       yum:
         name: python3
         state: present
@@ -54,38 +47,33 @@
     - name: Install virtualenv package
       pip:
         name: virtualenv
-        executable: pip
         state: present
 
     - name: Create a virtual environment
-      command: virtualenv -p python3 venv
+      ansible.builtin.command: virtualenv -p python3 venv
       args:
         chdir: "{{ app_directory }}/repository"
 
     - name: Activate virtual environment
-      shell:
-        cmd: "source {{ app_directory }}/repository/venv/bin/activate && python --version"
+      ansible.builtin.shell: source "{{ app_directory }}/repository/venv/bin/activate"
 
     - name: Install flask within virtual environment
       pip: 
         name: flask
-        executable: pip
         state: present
 
     - name: Run flask app
-      command: nohup python3 app.py &
+      ansible.builtin.command: nohup python3 app.py &
       async: 60
       poll: 0
       args:
         chdir: "{{ app_directory }}/repository"
 
     - name: Get the PID of the flask app
-      shell: "ps aux | grep 'python3 app.py' | grep -v grep | awk '{print $2}'"
+      ansible.builtin.shell: "ps aux | grep 'python3 app.py' | grep -v grep | awk '{print $2}'"
       register: flask_pid
       ignore_errors: yes
 
     - name: Stop flask app after 60 seconds
-      shell: "sleep 60 && kill -TERM {{ flask_pid.stdout }}"
+      ansible.builtin.shell: "sleep 60 && kill -TERM {{ flask_pid.stdout }}"
       ignore_errors: yes
-
-...

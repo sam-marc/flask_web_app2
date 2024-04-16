@@ -40,13 +40,8 @@
       when: ansible_distribution == "Amazon" or ansible_distribution == "CentOS" or ansible_distribution == "Ubuntu"
 
     - name: Install pip
-      get_url:
-        url: https://bootstrap.pypa.io/get-pip.py
-        dest: /tmp/get-pip.py
+      command: "curl https://bootstrap.pypa.io/get-pip.py | python3"
       become: yes
-      become_user: root
-      args:
-        creates: /usr/local/bin/pip
       when: ansible_distribution == "Amazon" or ansible_distribution == "CentOS" or ansible_distribution == "Ubuntu"
 
     - name: Install virtualenv package
@@ -61,7 +56,7 @@
         creates: "{{ app_directory }}/venv"
 
     - name: Activate virtual environment
-      command: source {{ app_directory }}/venv/bin/activate
+      shell: "source {{ app_directory }}/venv/bin/activate"
       args:
         executable: /bin/bash
       become: yes
@@ -71,7 +66,7 @@
       pip:
         name: flask
         virtualenv: "{{ app_directory }}/venv"
-
+        
     - name: Run Flask app
       command: python {{ app_directory }}/repository/app.py &
       async: 60

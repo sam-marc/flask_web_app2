@@ -19,6 +19,25 @@
         state: present
       when: ansible_distribution == 'Ubuntu'
 
+    - name: Ensure Git is installed
+      command: which git
+      register: git_location
+      ignore_errors: true
+      changed_when: false
+      failed_when: false
+
+    - name: Install git if not already installed
+      yum:
+        name: git
+        state: present
+      when: ansible_distribution == 'CentOS' and git_location.rc != 0
+
+    - name: Install git if not already installed
+      apt:
+        name: git
+        state: present
+      when: ansible_distribution == 'Ubuntu' and git_location.rc != 0
+
     - name: Create flask-app directory if it doesn't exist
       ansible.builtin.file:
         path: "{{ app_directory }}"
@@ -41,6 +60,25 @@
         name: python3
         state: present
       when: ansible_distribution == 'Ubuntu'
+
+    - name: Ensure pip is installed
+      command: which pip
+      register: pip_location
+      ignore_errors: true
+      changed_when: false
+      failed_when: false
+
+    - name: Install pip if not already installed
+      yum:
+        name: python3-pip
+        state: present
+      when: ansible_distribution == 'CentOS' and pip_location.rc != 0
+
+    - name: Install pip if not already installed
+      apt:
+        name: python3-pip
+        state: present
+      when: ansible_distribution == 'Ubuntu' and pip_location.rc != 0
 
     - name: Install virtualenv package
       pip:
@@ -73,10 +111,9 @@
     - name: Get the PID of the flask app
       shell: "ps aux | grep 'python3 app.py' | grep -v grep | awk '{print $2}'"
       register: flask_pid
-      ignore_errors: yes
+      ignore_errors: true
 
     - name: Stop flask app after 60 seconds
       shell: "sleep 60 && kill -TERM {{ flask_pid.stdout }}"
-      ignore_errors: yes
-      
+      ignore_errors: true
 ...

@@ -30,7 +30,7 @@ pipeline {
         stage('Deploy with Playbook') {
             steps {
                 //Execute ansible playbook for deployment
-                sh "cd ${env.WORKSPACE}/ && ansible-playbook -e 'external_yaml_file=app.py' install-flask.yml -i hosts.ini"
+                sh "cd ${env.WORKSPACE}/ && ansible-playbook install-flask.yml -i hosts.ini"
             }
         }
     }

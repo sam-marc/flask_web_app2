@@ -21,7 +21,7 @@ pipeline {
                     def targetDir = "${env.WORKSPACE}"
                     //Clone the repo into the specified directory
                     dir(targetDir) {
-                        git branch: "main", url: ""
+                        git branch: "main", url: "https://github.com/ctoweh/flask_web_app.git"
                     }
                 }
             }

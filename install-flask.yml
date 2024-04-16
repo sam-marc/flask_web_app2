@@ -7,17 +7,26 @@
     git_repo_url: "https://github.com/ctoweh/flask_web_app.git"
 
   tasks:
-    - name: Install git
-      yum:
+    - name: Install Git
+      package:
         name: git
         state: present
-      when: ansible_distribution == 'CentOS'
+      vars:
+        package_manager:
+          Debian: apt
+          RedHat: yum
+      vars_prompt:
+        - name: "os_family"
+          prompt: "Enter the OS family of your target hosts (Debian, RedHat)"
+          private: no
 
-    - name: Install git
-      apt:
-        name: git
+    - name: Install necessary system packages
+      package:
+        name: "{{ item }}"
         state: present
-      when: ansible_distribution == 'Ubuntu'
+      loop:
+        - python3-pip  # Example of a system package needed for Flask app
+        # Add any other system packages needed for your Flask app
 
     - name: Create flask-app directory if it doesn't exist
       ansible.builtin.file:

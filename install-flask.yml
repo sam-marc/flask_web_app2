@@ -11,7 +11,7 @@
 
     - name: Debug Ansible facts for Amazon Linux
       debug: 
-        var: ansible_pgk_mgr
+        var: ansible_pkg_mgr
       when: ansible_distribution == "Amazon"
 
     - name: Install Git on CentOS

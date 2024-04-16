@@ -7,19 +7,19 @@
     git_repo_url: "https://github.com/ctoweh/flask_web_app.git"
 
   tasks:
-    - name: Install git using dnf on CentOS 8
+    - name: Install Git using dnf on CentOS
       ansible.builtin.package:
         name: git
         state: present
       when: ansible_distribution == 'CentOS' and ansible_distribution_major_version == '8'
 
-    - name: Install git using yum on CentOS 7
+    - name: Install Git using yum on CentOS 7
       ansible.builtin.package:
         name: git
         state: present
       when: ansible_distribution == 'CentOS' and ansible_distribution_major_version == '7'
 
-    - name: Install git using apt on Ubuntu
+    - name: Install Git on Ubuntu
       ansible.builtin.package:
         name: git
         state: present
@@ -59,7 +59,7 @@
       args:
         executable: /bin/bash
 
-    - name: Install flask within virtual environment
+    - name: Install Flask within virtual environment
       ansible.builtin.command: pip install flask
       args:
         chdir: "{{ app_directory }}/repository"

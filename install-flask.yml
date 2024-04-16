@@ -8,35 +8,9 @@
 
   tasks:
     - name: Install git
-      yum:
+      package:
         name: git
         state: present
-      when: ansible_distribution == 'CentOS'
-
-    - name: Install git
-      apt:
-        name: git
-        state: present
-      when: ansible_distribution == 'Ubuntu'
-
-    - name: Ensure Git is installed
-      command: which git
-      register: git_location
-      ignore_errors: true
-      changed_when: false
-      failed_when: false
-
-    - name: Install git if not already installed
-      yum:
-        name: git
-        state: present
-      when: ansible_distribution == 'CentOS' and git_location.rc != 0
-
-    - name: Install git if not already installed
-      apt:
-        name: git
-        state: present
-      when: ansible_distribution == 'Ubuntu' and git_location.rc != 0
 
     - name: Create flask-app directory if it doesn't exist
       ansible.builtin.file:
@@ -45,47 +19,33 @@
         mode: '0755'
 
     - name: Clone Github repository
-      git: 
+      ansible.builtin.git: 
         repo: "{{ git_repo_url }}"
         dest: "{{ app_directory }}/repository"
 
-    - name: Update repositories and install Python on CentOS
-      yum:
-        name: python3
+    - name: Install Python 3 and pip
+      package:
+        name: "{{ item }}"
         state: present
+      loop:
+        - python3
+        - python3-pip
       when: ansible_distribution == 'CentOS'
 
-    - name: Install Python on Ubuntu
-      apt:
-        name: python3
+    - name: Install Python 3 and pip
+      package:
+        name: "{{ item }}"
         state: present
+      loop:
+        - python3
+        - python3-venv
       when: ansible_distribution == 'Ubuntu'
-
-    - name: Ensure pip is installed
-      command: which pip
-      register: pip_location
-      ignore_errors: true
-      changed_when: false
-      failed_when: false
-
-    - name: Install pip if not already installed
-      yum:
-        name: python3-pip
-        state: present
-      when: ansible_distribution == 'CentOS' and pip_location.rc != 0
-
-    - name: Install pip if not already installed
-      apt:
-        name: python3-pip
-        state: present
-      when: ansible_distribution == 'Ubuntu' and pip_location.rc != 0
 
     - name: Ensure virtualenv is installed
       pip:
         name: virtualenv
-        executable: pip
+        executable: pip3
         state: present
-      become_user: "{{ ansible_user }}"
 
     - name: Create a virtual environment
       command: virtualenv -p python3 venv
@@ -95,14 +55,14 @@
     - name: Activate virtual environment
       shell:
         cmd: "source {{ app_directory }}/repository/venv/bin/activate && python --version"
-      become_user: "{{ ansible_user }}"
+      args:
+        executable: /bin/bash
 
     - name: Install flask within virtual environment
       pip: 
         name: flask
         executable: pip
         state: present
-      become_user: "{{ ansible_user }}"
 
     - name: Run flask app
       command: nohup python3 app.py &
@@ -110,15 +70,12 @@
       poll: 0
       args:
         chdir: "{{ app_directory }}/repository"
-      become_user: "{{ ansible_user }}"
 
     - name: Get the PID of the flask app
       shell: "ps aux | grep 'python3 app.py' | grep -v grep | awk '{print $2}'"
       register: flask_pid
       ignore_errors: true
-      become_user: "{{ ansible_user }}"
 
     - name: Stop flask app after 60 seconds
       shell: "sleep 60 && kill -TERM {{ flask_pid.stdout }}"
       ignore_errors: true
-      become_user: "{{ ansible_user }}"

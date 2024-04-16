@@ -1,97 +1,114 @@
 ---
-- name: Deploy Flask web app
+- name: setup flask environment
   hosts: all
-  become: yes
-  vars:
-    app_directory: "/home/{{ ansible_user }}/flask-app"
-    git_repo_url: "https://github.com/ctoweh/flask_web_app.git"
+  become: true
+  remote_user: root
 
   tasks:
-    - name: Install git on CentOS 
-      yum:
-        name: git
-        state: present
-      when: ansible_distribution == "CentOS"
-
-    - name: Install git on Amazon Linux 
-      dnf:
-        name: git
-        state: present
-      when: - ansible_distribution == "Amazon"
-            - ansible_distribution_major_version == "2"  # Check if it's Amazon Linux 2
-
-    - name: Install git on Ubuntu
+    - name: update apt cache
       apt:
-        name: git
-        state: present
-        when: ansible_distribution == "Ubuntu"
+        update_cache: yes
+      when: ansible_pkg_mgr == "apt"
 
-    - name: Create flask-app directory
+    - name: update dnf cache
+      dnf:
+        update_cache: yes
+      when: ansible_pkg_mgr == "dnf"
+
+    - name: update yum cache
+      yum:
+        update_cache: yes
+      when: ansible_pkg_mgr == "yum"
+
+    - name: install necessary packages for apt
+      apt:
+        name:
+          - python3-pip
+          - python3-dev
+          - build-essential
+          - python3-venv
+          - git
+          - ufw
+        state: present
+      when: ansible_pkg_mgr == "apt"
+
+    - name: install necessary packages for yum
+      yum:
+        name:
+          - python3-pip
+          - python3-devel
+          - python3-venv
+          - git
+        state: present
+      when: ansible_pkg_mgr == "yum"
+
+    - name: install necessary packages for dnf
+      dnf:
+        name:
+          - python3-pip
+          - python3-devel
+          - python3-venv
+          - git
+        state: present
+      when: ansible_pkg_mgr == "dnf"
+
+    - name: Create a directory for CentOS
       file:
-        path: "{{ app_directory }}"
+        path: flask_dir
         state: directory
-        mode: "0755"
+        mode: 0777
+        owner: centos
+        group: centos
+      when: ansible_pkg_mgr == "yum"
 
-    - name: Clone GitHub repository
-      git:
-        repo: "{{ git_repo_url }}"
-        dest: "{{ app_directory }}/repository"
-        update: yes
+    - name: Create a directory for Amazon Linux
+      file:
+        path: flask_dir
+        state: directory
+        mode: 0777
+        owner: ec2-user
+        group: ec2-user
+      when: ansible_pkg_mgr == "yum"
 
-    - name: Update repositories and install Python
-      package:
-        name: "{{ item }}"
-        state: present
-      loop:
-        - python3
-      when: ansible_distribution == "Amazon" or ansible_distribution == "CentOS" or ansible_distribution == "Ubuntu"
+    - name: Create a directory for Ubuntu
+      file:
+        path: flask_dir
+        state: directory
+        mode: 0777
+        owner: ubuntu
+        group: ubuntu
+      when: ansible_pkg_mgr == "apt"
 
-    - name: Install pip
-      command: "curl https://bootstrap.pypa.io/get-pip.py | python3"
-      become: yes
-      when: ansible_distribution == "Amazon" or ansible_distribution == "CentOS" or ansible_distribution == "Ubuntu"
+    - name: remove existing flask_dir
+      file: 
+        path: ~/flask_dir
+        state: absent
+      ignore errors: yes
 
-    - name: Install virtualenv package
-      pip:
-        name: virtualenv
-        state: present
-      when: ansible_distribution == "Amazon" or ansible_distribution == "CentOS" or ansible_distribution == "Ubuntu"
+    - name: clone git repository
+      git: 
+        repo:
+        dest: ~/flask_dir/
+        version: main
 
-    - name: Create virtual environment
-      command: python3 -m venv {{ app_directory }}/venv
+    - name: create virtual environment
+      command: python3 -m venv flask_dir/.myenv
       args:
-        creates: "{{ app_directory }}/venv"
-
-    - name: Activate virtual environment
-      shell: "source {{ app_directory }}/venv/bin/activate"
+        chdir: "~/"
+    
+    - name: activate virtual environment
+      command: /bin/bash -c "source flask_dir/.myenv/bin/activate"
       args:
-        executable: /bin/bash
-      become: yes
-      become_user: "{{ ansible_user }}"
+        chdir: "~/"
 
-    - name: Install Flask within virtual environment
+    - name: install flask using pip
       pip:
         name: flask
-        virtualenv: "{{ app_directory }}/venv"
-        
-    - name: Run Flask app
-      command: python {{ app_directory }}/repository/app.py &
-      async: 60
-      poll: 0
-      register: flask_app_process
-
-    - name: Wait for Flask app to run
-      async_status:
-        jid: "{{ flask_app_process.ansible_job_id }}"
-      register: job_result
-      until: job_result.finished
-      retries: 6
-      delay: 10
-
-    - name: Get PID of Flask app
-      shell: pgrep -f "python {{ app_directory }}/repository/app.py"
-      register: flask_app_pid
-
-    - name: Stop Flask app
-      shell: kill -9 "{{ flask_app_pid.stdout }}"
-      ignore_errors: true
+        executable: ~/flask_dir/.myenv/bin/pip
+        state: present
+    
+    - name: activate virtual environment
+      command: /bin/bash -c "source ~/flask_dir/.myenv/bin/activate"
+    
+    - name: start flask app
+      command: /bin/bash -c "export FLASK_APP=~/flask_dir/app.py && ~/flask_dir/.myenv/bin/flask run --host=0.0.0.0 --port=5000 &"

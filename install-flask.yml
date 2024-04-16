@@ -57,16 +57,21 @@
 
     - name: Create virtual environment
       command: python3 -m venv {{ app_directory }}/venv
+      args:
+        creates: "{{ app_directory }}/venv"
 
     - name: Activate virtual environment
-      command: source {{ app_directory }}/venv/bin/activate
+      command: "source {{ app_directory }}/venv/bin/activate && python --version"
       args:
         executable: /bin/bash
+      become: yes
+      become_user: "{{ ansible_user }}"
 
     - name: Install Flask within virtual environment
       pip:
         name: flask
-        virtualenv: "{{ app_directory }}/venv"
+        executable: pip3
+        state: present
 
     - name: Run Flask app
       command: python {{ app_directory }}/repository/app.py &

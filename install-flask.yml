@@ -23,7 +23,7 @@
         repo: "{{ git_repo_url }}"
         dest: "{{ app_directory }}/repository"
 
-    - name: Install Python 3 and pip
+    - name: Install Python 3 and pip on CentOS
       package:
         name: "{{ item }}"
         state: present
@@ -32,7 +32,7 @@
         - python3-pip
       when: ansible_distribution == 'CentOS'
 
-    - name: Install Python 3 and pip
+    - name: Install Python 3 and pip on Ubuntu
       package:
         name: "{{ item }}"
         state: present

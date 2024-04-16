@@ -2,29 +2,32 @@
 - name: Ubuntu Server Configuration
   hosts: n3
   become: yes
+
+  vars:
+    app_directory: "/home/ubuntu/flask-app"
+
   tasks:
+    - name: Gathering Facts
+      ansible.builtin.setup:
+
     - name: Update apt package cache
       ansible.builtin.apt:
         update_cache: yes
-      become: yes
 
     - name: Install git
       ansible.builtin.apt:
         name: git
         state: present
-      become: yes
 
     - name: Create flask-app directory if it doesn't exist
       ansible.builtin.file:
         path: "{{ app_directory }}"
         state: directory
-      become: yes
 
     - name: Clone Github repository
       ansible.builtin.git:
         repo: "https://github.com/yourusername/your-repo.git"
         dest: "{{ app_directory }}"
-      become: yes
 
     - name: Install Python 3 and pip
       ansible.builtin.apt:
@@ -33,19 +36,15 @@
       loop:
         - python3
         - python3-pip
-      become: yes
 
     - name: Ensure virtualenv is installed
       ansible.builtin.command: 
         cmd: "python3 -m pip install virtualenv"
-      become: yes
 
     - name: Create a virtual environment
       ansible.builtin.command: 
         cmd: "python3 -m virtualenv {{ app_directory }}/venv"
-      become: yes
 
     - name: Activate virtual environment
       ansible.builtin.command: 
         cmd: "{{ app_directory }}/venv/bin/python --version"
-      become: yes

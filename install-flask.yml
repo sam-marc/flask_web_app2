@@ -2,6 +2,10 @@
 - name: Configure servers 
   hosts: all
   become: true
+  vars_prompt:
+    - name: "os_family"
+      prompt: "Enter the OS family of your target hosts (Debian, RedHat)"
+      private: no
   vars:
     app_directory: "/home/{{ ansible_user }}/flask-app"
     git_repo_url: "https://github.com/ctoweh/flask_web_app.git"

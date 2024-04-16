@@ -11,21 +11,25 @@
       package:
         name: git
         state: present
-      when: ansible_distribution == "Amazon" or ansible_distribution == "CentOS" or ansible_distribution == "Ubuntu"
+      when: ansible_distribution == "Amazon" or ansible_distribution == "Ubuntu"
+
+    - name: Install git on CentOS using dnf
+      dnf:
+        name: git
+        state: present
+      when: ansible_distribution == "CentOS"
 
     - name: Create flask-app directory
       file:
         path: "{{ app_directory }}"
         state: directory
         mode: "0755"
-      when: ansible_distribution == "Amazon" or ansible_distribution == "CentOS" or ansible_distribution == "Ubuntu"
 
     - name: Clone GitHub repository
       git:
         repo: "{{ git_repo_url }}"
         dest: "{{ app_directory }}/repository"
         update: yes
-      when: ansible_distribution == "Amazon" or ansible_distribution == "CentOS" or ansible_distribution == "Ubuntu"
 
     - name: Update repositories and install Python
       package:
@@ -53,24 +57,22 @@
 
     - name: Create virtual environment
       command: python3 -m venv {{ app_directory }}/venv
-      when: ansible_distribution == "Amazon" or ansible_distribution == "CentOS" or ansible_distribution == "Ubuntu"
 
     - name: Activate virtual environment
       command: source {{ app_directory }}/venv/bin/activate
-      when: ansible_distribution == "Amazon" or ansible_distribution == "CentOS" or ansible_distribution == "Ubuntu"
+      args:
+        executable: /bin/bash
 
     - name: Install Flask within virtual environment
       pip:
         name: flask
         virtualenv: "{{ app_directory }}/venv"
-      when: ansible_distribution == "Amazon" or ansible_distribution == "CentOS" or ansible_distribution == "Ubuntu"
 
     - name: Run Flask app
       command: python {{ app_directory }}/repository/app.py &
       async: 60
       poll: 0
       register: flask_app_process
-      when: ansible_distribution == "Amazon" or ansible_distribution == "CentOS" or ansible_distribution == "Ubuntu"
 
     - name: Wait for Flask app to run
       async_status:
@@ -79,14 +81,11 @@
       until: job_result.finished
       retries: 6
       delay: 10
-      when: ansible_distribution == "Amazon" or ansible_distribution == "CentOS" or ansible_distribution == "Ubuntu"
 
     - name: Get PID of Flask app
       shell: pgrep -f "python {{ app_directory }}/repository/app.py"
       register: flask_app_pid
-      when: ansible_distribution == "Amazon" or ansible_distribution == "CentOS" or ansible_distribution == "Ubuntu"
 
     - name: Stop Flask app
       shell: kill -9 "{{ flask_app_pid.stdout }}"
       ignore_errors: true
-      when: ansible_distribution == "Amazon" or ansible_distribution == "CentOS" or ansible_distribution == "Ubuntu"

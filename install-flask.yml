@@ -45,9 +45,7 @@
       when: ansible_os_family == 'Linux'
 
     - name: Create a virtual environment
-      ansible.builtin.command: python3 -m venv venv
-      args:
-        chdir: "{{ app_directory }}/repository"
+      ansible.builtin.command: python3 -m venv "{{ app_directory }}/repository/venv"
 
     - name: Activate virtual environment
       ansible.builtin.shell: |

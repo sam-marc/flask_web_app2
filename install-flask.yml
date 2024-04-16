@@ -22,8 +22,7 @@
         name: "{{ item }}"
         state: present
       loop:
-        - python3-pip  # Example of a system package needed for Flask app
-        # Add any other system packages needed for your Flask app
+        - python3-pip  
 
     - name: Create flask-app directory if it doesn't exist
       ansible.builtin.file:
@@ -59,7 +58,7 @@
         chdir: "{{ app_directory }}/repository"
 
     - name: Activate virtual environment
-      ansible.builtin.shell: source "{{ app_directory }}/repository/venv/bin/activate"
+      ansible.builtin.shell: "{{ app_directory }}/repository/venv/bin/activate"
 
     - name: Install flask within virtual environment
       pip: 

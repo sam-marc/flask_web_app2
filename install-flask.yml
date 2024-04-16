@@ -11,13 +11,7 @@
       package:
         name: git
         state: present
-      when: ansible_os_family == "RedHat" or ansible_distribution == "CentOS"
-
-    - name: Install git
-      apt:
-        name: git
-        state: present
-      when: ansible_os_family == "Debian" or ansible_distribution == "Ubuntu"
+      when: ansible_os_family == "RedHat" or ansible_distribution == "CentOS" or ansible_os_family == "Debian" or ansible_distribution == "Ubuntu"
 
     - name: Create flask-app directory
       file:
@@ -36,7 +30,6 @@
         name: "{{ item }}"
         state: present
       loop:
-        - python
         - python3
       when: ansible_os_family == "RedHat" or ansible_distribution == "CentOS" or ansible_os_family == "Debian" or ansible_distribution == "Ubuntu"
 
@@ -46,8 +39,6 @@
         dest: /tmp/get-pip.py
       become: yes
       become_user: root
-      args:
-        creates: /usr/local/bin/pip
       when: ansible_os_family == "RedHat" or ansible_distribution == "CentOS" or ansible_os_family == "Debian" or ansible_distribution == "Ubuntu"
 
     - name: Install virtualenv package

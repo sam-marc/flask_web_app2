@@ -1,0 +1,79 @@
+---
+- name: Configure servers 
+  hosts: all
+  become: true
+  vars:
+    app_directory: "/home/{{ ansible_user }}/flask-app"
+    git_repo_url: "https://github.com/ctoweh/flask_web_app.git"
+    python_packages:
+      centos: 
+        - python3
+        - python3-pip
+      linux:
+        - python3
+        - python3-pip
+      ubuntu:
+        - python3
+        - python3-pip
+    virtualenv_package:
+      centos: virtualenv
+      linux: virtualenv
+      ubuntu: python3-virtualenv
+
+  tasks:
+    - name: Install git
+      package:
+        name: git
+        state: present 
+
+    - name: Create flask-app directory if it doesn't exist
+      ansible.builtin.file:
+        path: "{{ app_directory }}"
+        state: directory
+        mode: '0755'
+
+    - name: Clone Github repository
+      git: 
+        repo: "{{ git_repo_url }}"
+        dest: "{{ app_directory }}/repository"
+
+    - name: Update repositories and install Python
+      package:
+        name: "{{ python_packages[ansible_distribution] }}"
+        state: present
+    
+    - name: Install virtualenv package
+      package:
+        name: "{{ virtualenv_package[ansible_distribution] }}"
+        state: present
+
+    - name: Create a virtual environment
+      command: virtualenv -p python3 venv
+      args:
+        chdir: "{{ app_directory }}/repository"
+
+    - name: Activate virtual environment
+      shell:
+        cmd: "source {{ app_directory }}/repository/venv/bin/activate && python --version"
+
+    - name: Install flask within virtual environment
+      pip: 
+        name: flask
+        executable: pip
+        state: present
+
+    - name: Run flask app
+      command: nohup python3 app.py &
+      async: 60
+      poll: 0
+      args:
+        chdir: "{{ app_directory }}/repository"
+
+    - name: Get the PID of the flask app
+      shell: "ps aux | grep 'python3 app.py' | grep -v grep |awk '{print $2}'"
+      register: flask_pid
+      ignore_errors: yes
+
+    - name: Stop flask app after 60 seconds
+      shell: "sleep 60 && kill -TERM {{ flask_pid.stdout }}"
+      ignore_errors: yes

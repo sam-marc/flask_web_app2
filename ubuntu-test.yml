@@ -1,48 +1,51 @@
 ---
-- name: Configure Ubuntu server (n3)
+- name: Ubuntu Server Configuration
   hosts: n3
-  become: true
-  vars:
-    app_directory: "/home/{{ ansible_user }}/flask-app"
-    git_repo_url: "https://github.com/ctoweh/flask_web_app.git"
-
+  become: yes
   tasks:
+    - name: Update apt package cache
+      ansible.builtin.apt:
+        update_cache: yes
+      become: yes
+
+    - name: Install git
+      ansible.builtin.apt:
+        name: git
+        state: present
+      become: yes
+
     - name: Create flask-app directory if it doesn't exist
       ansible.builtin.file:
         path: "{{ app_directory }}"
         state: directory
-        mode: '0755'
+      become: yes
 
     - name: Clone Github repository
-      ansible.builtin.git: 
-        repo: "{{ git_repo_url }}"
-        dest: "{{ app_directory }}/repository"
+      ansible.builtin.git:
+        repo: "https://github.com/yourusername/your-repo.git"
+        dest: "{{ app_directory }}"
+      become: yes
 
     - name: Install Python 3 and pip
-      ansible.builtin.package:
+      ansible.builtin.apt:
         name: "{{ item }}"
         state: present
       loop:
         - python3
         - python3-pip
+      become: yes
 
-    - name: Ensure python3-venv is installed
-      ansible.builtin.package:
-        name: python3-venv
-        state: present
+    - name: Ensure virtualenv is installed
+      ansible.builtin.command: 
+        cmd: "python3 -m pip install virtualenv"
+      become: yes
 
     - name: Create a virtual environment
       ansible.builtin.command: 
-        cmd: python3 -m venv "{{ app_directory }}/venv"
+        cmd: "python3 -m virtualenv {{ app_directory }}/venv"
+      become: yes
 
     - name: Activate virtual environment
-      ansible.builtin.shell: 
-        cmd: source "{{ app_directory }}/venv/bin/activate" && python --version
-      args:
-        executable: /bin/bash
-
-    - name: Install Flask within virtual environment
       ansible.builtin.command: 
-        cmd: pip install flask
-      args:
-        chdir: "{{ app_directory }}/repository"
+        cmd: "{{ app_directory }}/venv/bin/python --version"
+      become: yes

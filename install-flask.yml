@@ -17,7 +17,8 @@
       dnf:
         name: git
         state: present
-      when: ansible_distribution == "Amazon"
+      when: - ansible_distribution == "Amazon"
+            - ansible_distribution_major_version == "2"  # Check if it's Amazon Linux 2
 
     - name: Install git on Ubuntu
       apt:

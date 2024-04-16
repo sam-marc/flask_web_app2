@@ -63,3 +63,4 @@
       ansible.builtin.command: pip install flask
       args:
         chdir: "{{ app_directory }}/repository"
+...

@@ -36,10 +36,16 @@ pipeline {
     }
 
     post {
-        always {
-            emailext body: 'Check console output at $BUILD_URL to view the results.',
-            subject: '$PROJECT_NAME - Build #BUILD_NUMBER =$BUILD_STATUS',
-            to: 'towehcorina@gmail.com'
+        success {
+            mail to: "towehcorina@gmail.com",
+            subject: "FlaskWebApp Succesful",
+            body: "Check console output for details"
+
+        fail { 
+            mail to: "towehcorina@gmail.com",
+            subject: "FlaskWebApp Failed",
+            body: "Check console output for details"
+    
         }
     }
 }

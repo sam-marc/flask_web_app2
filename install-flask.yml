@@ -119,10 +119,10 @@
         state: present
     
     - name: start flask app
-      command: /bin/bash -c "export FLASK_APP=~/flask_dir/app.py && ~/flask_dir/.myenv/bin/flask run --host=0.0.0.0 --port=5000 &"
+      command: /bin/bash -c "export FLASK_APP=~/flask_dir/app.py && ~/flask_dir/.myenv/bin/flask run --host=0.0.0.0 --port=5000 "
 
     - name: restart flask server
-      command: "pkill -f 'python3 app.py' && nohup python3 ~/flask_dir/.myenv/bin/flask run --host=0.0.0.0 --port=5000 &"
+      command: "pkill -f 'python3 app.py' && nohup python3 ~/flask_dir/.myenv/bin/flask run --host=0.0.0.0 --port=5000 "
       async: 30
       poll: 0
       become: yes

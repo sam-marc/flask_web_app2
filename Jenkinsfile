@@ -1,6 +1,6 @@
 pipeline {
     agent {
-        label 'ansible-master'
+        label 'node1'
     }
 
     tools {
@@ -21,7 +21,7 @@ pipeline {
                     def targetDir = "${env.WORKSPACE}"
                     //Clone the repo into the specified directory
                     dir(targetDir) {
-                        git branch: "main", url: "https://github.com/ctoweh/flask_web_app.git"
+                        git branch: "main", url: "https://github.com/sam-marc/flask_web_app2.git"
                     }
                 }
             }
@@ -37,13 +37,13 @@ pipeline {
 
     post {
         success {
-            mail to: "towehcorina@gmail.com",
+            mail to: "sam883marc2gmail.com",
             subject: "FlaskWebApp Succesful",
             body: "Check console output for details"
         }
 
         failure { 
-            mail to: "towehcorina@gmail.com",
+            mail to: "sam883marc@gmail.com",
             subject: "FlaskWebApp Failed",
             body: "Check console output for details"
         }
